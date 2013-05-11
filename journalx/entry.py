@@ -26,7 +26,7 @@ class Entry(ObjectPlus):
     UPDATE_URL = '/entries/%s'
     GET_URL = '/entries/%s'
     DELETE_URL = '/entries/%s'
-    COMMENTS_URL = '/entries/%s/comments'
+    COMMENTS_URL = '/entries/%s/comments/'
 
     __gsignals__ = {
         'entry-posted':               (GObject.SignalFlags.RUN_FIRST,
@@ -88,8 +88,8 @@ class Entry(ObjectPlus):
         GObject.idle_add(self._get,
                          self.COMMENTS_URL % self._id,
                          None,
-                         'entry-downloaded',
-                         'entry-downloaded-failed')
+                         'comments-downloaded',
+                         'comments-downloaded-failed')
 
     def _params(self, title=None, desc=None):
         params = []

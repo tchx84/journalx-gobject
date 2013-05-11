@@ -69,7 +69,7 @@ class ObjectPlus(Object):
         self.emit(signal, message)
 
     def _id_hook(self, info):
-        if 'id' in info.keys():
+        if isinstance(info, dict) and 'id' in info.keys():
             self._id = info['id']
 
     def _file(self, field, path):
