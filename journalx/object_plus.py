@@ -60,10 +60,14 @@ class ObjectPlus(Object):
         try:
             info = json.loads(data)
             self._id_hook(info)
-            self.emit(signal, info)
+        except ValueError:
+            info = self._data_hook(data)
         except Exception, e:
+            info = None
             logging.error('%s: _completed_cb crashed with %s',
                           self.__class__.__name__, str(e))
+        finally:
+          self.emit(signal, info)
 
     def _failed_cb(self, object, message, signal):
         self.emit(signal, message)
@@ -71,6 +75,9 @@ class ObjectPlus(Object):
     def _id_hook(self, info):
         if isinstance(info, dict) and 'id' in info.keys():
             self._id = info['id']
+
+    def _data_hook(self, data):
+        return data
 
     def _file(self, field, path):
         if not path:

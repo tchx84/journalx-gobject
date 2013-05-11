@@ -41,7 +41,11 @@ def __phase3_failed_cb(entry, info):
     loop.quit()
 
 def __phase4_failed_cb(entry, info):
-    print '[FAILED] phase4: entries-deleted-failed, with %s' % info
+    print '[FAILED] phase4: screenshot-downloaded-failed, with %s' % info
+    loop.quit()
+
+def __phase5_failed_cb(entry, info):
+    print '[FAILED] phase5: entries-deleted-failed, with %s' % info
     loop.quit()
 
 
@@ -62,12 +66,19 @@ def __phase2_cb(entry, info):
 def __phase3_cb(entry, info):
     print '[OK] phase3: entry-updated, with: \n%s\n' % info
 
-    entry.connect('entry-deleted', __phase4_cb)
-    entry.connect('entry-deleted-failed', __phase4_failed_cb)
-    entry.delete()
+    entry.connect('screenshot-downloaded', __phase4_cb)
+    entry.connect('screenshot-downloaded-failed', __phase4_failed_cb)
+    entry.screenshot()
 
 def __phase4_cb(entry, info):
-    print '[OK] phase4: entries-deleted, with: \n%s\n' % info
+    print '[OK] phase4: screenshot-downloaded, with: \nsize %d\n' % len(info)
+
+    entry.connect('entry-deleted', __phase5_cb)
+    entry.connect('entry-deleted-failed', __phase5_failed_cb)
+    entry.delete()
+
+def __phase5_cb(entry, info):
+    print '[OK] phase5: entries-deleted, with: \n%s\n' % info
     loop.quit()
 
 entry = Entry()

@@ -27,28 +27,33 @@ class Entry(ObjectPlus):
     GET_URL = '/entries/%s'
     DELETE_URL = '/entries/%s'
     COMMENTS_URL = '/entries/%s/comments/'
+    SCREENSHOT_URL = '/entries/%s/screenshot'
 
     __gsignals__ = {
-        'entry-posted':               (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([object])),
-        'entry-posted-failed':        (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([str])),
-        'entry-updated':              (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([object])),
-        'entry-updated-failed':       (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([str])),
-        'entry-downloaded':           (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([object])),
-        'entry-downloaded-failed':    (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([str])),
-        'entry-deleted':              (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([object])),
-        'entry-deleted-failed':       (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([str])),
-        'comments-downloaded':        (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([object])),
-        'comments-downloaded-failed': (GObject.SignalFlags.RUN_FIRST,
-                                      None, ([str]))}
+        'entry-posted':                 (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([object])),
+        'entry-posted-failed':          (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([str])),
+        'entry-updated':                (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([object])),
+        'entry-updated-failed':         (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([str])),
+        'entry-downloaded':             (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([object])),
+        'entry-downloaded-failed':      (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([str])),
+        'entry-deleted':                (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([object])),
+        'entry-deleted-failed':         (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([str])),
+        'comments-downloaded':          (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([object])),
+        'comments-downloaded-failed':   (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([str])),
+        'screenshot-downloaded':        (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([object])),
+        'screenshot-downloaded-failed': (GObject.SignalFlags.RUN_FIRST,
+                                        None, ([str]))}
 
     def post(self, title, desc, screenshot_path):
         self._check_is_not_created()
@@ -90,6 +95,14 @@ class Entry(ObjectPlus):
                          None,
                          'comments-downloaded',
                          'comments-downloaded-failed')
+
+    def screenshot(self):
+        self._check_is_created()
+        GObject.idle_add(self._get,
+                         self.SCREENSHOT_URL % self._id,
+                         None,
+                         'screenshot-downloaded',
+                         'screenshot-downloaded-failed')
 
     def _params(self, title=None, desc=None):
         params = []

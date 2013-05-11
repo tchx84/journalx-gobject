@@ -24,7 +24,7 @@ from gi.repository import GObject
 class Object(GObject.GObject):
 
     __gsignals__ = {
-        'transfer-completed': (GObject.SignalFlags.RUN_FIRST, None, ([str])),
+        'transfer-completed': (GObject.SignalFlags.RUN_FIRST, None, ([object])),
         'transfer-progress': (GObject.SignalFlags.RUN_FIRST, None,
                              ([float, float, str])),
         'transfer-failed': (GObject.SignalFlags.RUN_FIRST, None, ([str])),
