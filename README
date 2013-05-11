@@ -1,0 +1,3 @@
+journalx-gobject allows you access journalx REST API via
+a set of GObject based objects for easy integration with your
+GLib2 based code.
