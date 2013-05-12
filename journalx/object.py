@@ -20,6 +20,8 @@ import urllib
 
 from gi.repository import GObject
 
+from setting import Setting
+
 
 class Object(GObject.GObject):
 
@@ -29,6 +31,9 @@ class Object(GObject.GObject):
                              ([float, float, str])),
         'transfer-failed': (GObject.SignalFlags.RUN_FIRST, None, ([str])),
         'transfer-started': (GObject.SignalFlags.RUN_FIRST, None, ([]))}
+
+    def _generate_header(self):
+        return ['X-Sugar-Buddy: %s' % Setting.get_buddy_credential()]
 
     def _update_cb(self, down_total, down_done, up_total, up_done, states):
 
@@ -62,11 +67,8 @@ class Object(GObject.GObject):
 
         if method == 'POST':
             c.setopt(c.POST, 1)
-            c.setopt(c.HTTPHEADER, [])
-
             if file is not None:
                 params += [(file['field'], (c.FORM_FILE, file['path']))]
-
             if params is not None:
                 c.setopt(c.HTTPPOST, params)
             else:
@@ -74,7 +76,6 @@ class Object(GObject.GObject):
 
         elif method == 'GET':
             c.setopt(c.HTTPGET, 1)
-            c.setopt(c.HTTPHEADER, [])
             if params:
                 url += '?%s' % urllib.urlencode(params)
 
@@ -94,6 +95,9 @@ class Object(GObject.GObject):
         def __write_cb(data):
             buffer.append(data)
 
+        c.setopt(c.HTTPHEADER, self._generate_header())
+        c.setopt(pycurl.SSL_VERIFYPEER, 0)   
+        c.setopt(pycurl.SSL_VERIFYHOST, 0)
         c.setopt(c.URL, url)
         c.setopt(c.NOPROGRESS, 0)
         c.setopt(c.PROGRESSFUNCTION, pre_update_cb)

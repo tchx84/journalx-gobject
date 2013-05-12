@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301 USA.
 
+import uuid
 import sys
 
 from gi.repository import GObject
@@ -27,6 +28,7 @@ from journalx.entry import Entry
 
 
 Setting.set_url('http://localhost:8000')
+Setting.set_buddy_credential(uuid.uuid1())
 
 def __phase1_failed_cb(entry, info):
     print '[FAILED] phase1: entries-posted-failed, with %s' % info

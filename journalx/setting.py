@@ -24,3 +24,11 @@ class Setting:
     @classmethod
     def get_url(cls, url):
       return '%s%s' % (cls.url, url)
+
+    @classmethod
+    def set_buddy_credential(cls, buddy_credential):
+      cls.buddy_credential = buddy_credential
+
+    @classmethod
+    def get_buddy_credential(cls):
+      return cls.buddy_credential

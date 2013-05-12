@@ -30,36 +30,41 @@ class ObjectPlus(Object):
       self._id = id
 
     def _get(self, url, params, completed_data, failed_data):
-        completed_id = self.connect('transfer-completed',
-                                    self._completed_cb, completed_data)
-        failed_id = self.connect('transfer-failed',
-                                 self._failed_cb, failed_data)
-        self.request('GET', Setting.get_url(url), params)
-        self.disconnect(completed_id)
-        self.disconnect(failed_id)
+        self._call('GET',
+                    url,
+                    params,
+                    None,
+                    completed_data,
+                    failed_data)
 
     def _post(self, url, params, file, completed_data, failed_data):
-        completed_id = self.connect('transfer-completed',
-                                    self._completed_cb, completed_data)
-        failed_id = self.connect('transfer-failed',
-                                 self._failed_cb, failed_data)
-        self.request('POST', Setting.get_url(url), params, file)
-        self.disconnect(completed_id)
-        self.disconnect(failed_id)
+        self._call('POST',
+                    url,
+                    params,
+                    file,
+                    completed_data,
+                    failed_data)
 
     def _delete(self, url, completed_data, failed_data):
+        self._call('DELETE',
+                    url,
+                    None,
+                    None,
+                    completed_data,
+                    failed_data)
+
+    def _call(self, method, url, params, file, completed_data, failed_data):
         completed_id = self.connect('transfer-completed',
                                     self._completed_cb, completed_data)
         failed_id = self.connect('transfer-failed',
                                  self._failed_cb, failed_data)
-        self.request('DELETE', Setting.get_url(url))
+        self.request(method, Setting.get_url(url), params, file)
         self.disconnect(completed_id)
-        self.disconnect(failed_id)
+        self.disconnect(failed_id)   
 
     def _completed_cb(self, object, data, signal):
         try:
             info = json.loads(data)
-            self._id_hook(info)
         except ValueError:
             info = self._data_hook(data)
         except Exception, e:
@@ -67,6 +72,7 @@ class ObjectPlus(Object):
             logging.error('%s: _completed_cb crashed with %s',
                           self.__class__.__name__, str(e))
         finally:
+          self._id_hook(info)
           self.emit(signal, info)
 
     def _failed_cb(self, object, message, signal):
@@ -81,7 +87,7 @@ class ObjectPlus(Object):
 
     def _file(self, field, path):
         if not path:
-            return None
+          return None
 
         file = {}
         file['field'] =  field
