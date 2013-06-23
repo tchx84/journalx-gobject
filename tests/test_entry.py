@@ -22,9 +22,8 @@ import sys
 
 from gi.repository import GObject
 
-sys.path.append("..")
-from journalx.setting import Setting
-from journalx.entry import Entry
+from ..journalx.setting import Setting
+from ..journalx.entry import Entry
 
 
 Setting.set_url('http://localhost:8000')
@@ -52,40 +51,52 @@ def __phase5_failed_cb(entry, info):
 
 
 def __phase1_cb(entry, info):
-    print '[OK] phase1: entries-posted, with: \n%s\n' % info
-    
-    entry.connect('entry-downloaded', __phase2_cb)
-    entry.connect('entry-downloaded-failed', __phase2_failed_cb)
+    print '[OK] phase1: entries posted, with: \n%s\n' % info
+
+    id = entry.id
+
+    entry = Entry(id)
+    entry.connect('completed', __phase2_cb)
+    entry.connect('failed', __phase2_failed_cb)
     entry.get()
 
 def __phase2_cb(entry, info):
-    print '[OK] phase2: entry-downloaded, with: \n%s\n' % info
+    print '[OK] phase2: entry downloaded, with: \n%s\n' % info
 
-    entry.connect('entry-updated', __phase3_cb)
-    entry.connect('entry-updated-failed', __phase3_failed_cb)
+    id = entry.id
+
+    entry = Entry(id)
+    entry.connect('completed', __phase3_cb)
+    entry.connect('failed', __phase3_failed_cb)
     entry.update('new-title', 'new-description', 'screenshot.png')
 
 def __phase3_cb(entry, info):
-    print '[OK] phase3: entry-updated, with: \n%s\n' % info
+    print '[OK] phase3: entry updated, with: \n%s\n' % info
 
-    entry.connect('screenshot-downloaded', __phase4_cb)
-    entry.connect('screenshot-downloaded-failed', __phase4_failed_cb)
+    id = entry.id
+
+    entry = Entry(id)
+    entry.connect('completed', __phase4_cb)
+    entry.connect('failed', __phase4_failed_cb)
     entry.screenshot()
 
 def __phase4_cb(entry, info):
-    print '[OK] phase4: screenshot-downloaded, with: \nsize %d\n' % len(info)
+    print '[OK] phase4: screenshot downloaded, with: \nsize %d\n' % len(info)
 
-    entry.connect('entry-deleted', __phase5_cb)
-    entry.connect('entry-deleted-failed', __phase5_failed_cb)
+    id  = entry.id
+
+    entry = Entry(id)
+    entry.connect('completed', __phase5_cb)
+    entry.connect('failed', __phase5_failed_cb)
     entry.delete()
 
 def __phase5_cb(entry, info):
-    print '[OK] phase5: entries-deleted, with: \n%s\n' % info
+    print '[OK] phase5: entry deleted, with: \n%s\n' % info
     loop.quit()
 
 entry = Entry()
-entry.connect('entry-posted', __phase1_cb)
-entry.connect('entry-posted-failed', __phase1_failed_cb)
+entry.connect('completed', __phase1_cb)
+entry.connect('failed', __phase1_failed_cb)
 entry.post('title', 'description', 'screenshot.png')
 
 loop = GObject.MainLoop()

@@ -15,48 +15,35 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301 USA.
 
-from gi.repository import GObject
+from jobject import JObject
+from grestful.decorators import asynchronous
+from grestful.decorators import check_is_created
+from grestful.decorators import check_is_not_created
 
-from object_plus import ObjectPlus
 
-
-class Comment(ObjectPlus):
+class Comment(JObject):
 
     POST_URL = '/entries/%s/comments/'
     DELETE_URL = '/entries/%s/comments/%s'
 
-    __gsignals__ = {
-        'comment-posted':         (GObject.SignalFlags.RUN_FIRST,
-                                  None, ([object])),
-        'comment-posted-failed':  (GObject.SignalFlags.RUN_FIRST,
-                                  None, ([str])),
-        'comment-deleted':        (GObject.SignalFlags.RUN_FIRST,
-                                  None, ([object])),
-        'comment-deleted-failed': (GObject.SignalFlags.RUN_FIRST,
-                                  None, ([str]))}
-
     def __init__(self, entry_id, comment_id=None):
-        ObjectPlus.__init__(self, comment_id)
+        JObject.__init__(self, comment_id)
         self._entry_id = entry_id
 
+    @asynchronous
+    @check_is_not_created
     def post(self, text):
-        self._check_is_not_created()
-        GObject.idle_add(self._post,
-                         self.POST_URL % self._entry_id,
-                         self._params(text),
-                         None,
-                         'comment-posted',
-                         'comment-posted-failed')
+        self._post(self._url(self.POST_URL % self._entry_id),
+                   self._params(text),
+                   None)
 
+    @asynchronous
+    @check_is_created
     def delete(self):
-        self._check_is_created()
-        GObject.idle_add(self._delete,
-                         self.DELETE_URL % (self._entry_id, self._id),
-                         'comment-deleted',
-                         'comment-deleted-failed')
+        self._delete(self._url(self.DELETE_URL % (self._entry_id, self.id)))
 
     def _params(self, text):
-      params = []
-      params +=  [('entry_id', (self._entry_id))]
-      params +=  [('text', (text))]
-      return params
+        params = []
+        params += [('entry_id', (self._entry_id))]
+        params += [('text', (text))]
+        return params

@@ -22,80 +22,84 @@ import sys
 
 from gi.repository import GObject
 
-sys.path.append("..")
-from journalx.setting import Setting
-from journalx.entry import Entry
-from journalx.comment import Comment
+from ..journalx.setting import Setting
+from ..journalx.entry import Entry
+from ..journalx.comment import Comment
 
 
 Setting.set_url('http://localhost:8000')
 Setting.set_buddy_credential(uuid.uuid1())
 
 def __phase1_failed_cb(entry, info):
-    print '[FAILED] phase1: entries-posted-failed, with %s' % info
+    print '[FAILED] phase1: entries posted failed, with %s' % info
     loop.quit()
 
 def __phase2_failed_cb(comment, info, entry):
-    print '[FAILED] phase2: comment-posted-failed, with %s' % info
+    print '[FAILED] phase2: comment posted failed, with %s' % info
     clean(entry)
 
 def __phase3_failed_cb(entry, info):
-    print '[FAILED] phase3: comments-downloaded-failed, with %s' % info
+    print '[FAILED] phase3: comments downloaded failed, with %s' % info
     clean(entry)
 
 def __phase4_failed_cb(comment, info, entry):
-    print '[FAILED] phase4: comment-deleted-failed, with %s' % info
+    print '[FAILED] phase4: comment deleted failed, with %s' % info
     clean(entry)
 
 def __cleaning_failed_cb(entry, info):
-    print '[FAILED] cleaning: entry-deleted-failed, with %s' % info
+    print '[FAILED] cleaning: entry deleted failed, with %s' % info
     loop.quit()
 
 def __phase1_cb(entry, info):
-    print '[OK] phase1: entry-posted, with: \n%s\n' % info
+    print '[OK] phase1: entry posted, with: \n%s\n' % info
 
-    # XXX curl does not like unicode POST params
-    entry_id = str(info['id'])
+    entry_id = str(entry.id)
 
     comment = Comment(entry_id)
-    comment.connect('comment-posted', __phase2_cb, entry)
-    comment.connect('comment-posted-failed', __phase2_failed_cb, entry)
+    comment.connect('completed', __phase2_cb, entry)
+    comment.connect('failed', __phase2_failed_cb, entry)
     comment.post('text')
 
 def __phase2_cb(comment, info, entry):
-    print '[OK] phase2: comment-posted, with: \n%s\n' % info
+    print '[OK] phase2: comment posted, with: \n%s\n' % info
 
-    entry.connect('comments-downloaded', __phase3_cb)
-    entry.connect('comments-downloaded-failed', __phase3_failed_cb)
+    id = entry.id
+
+    entry = Entry(id)
+    entry.connect('completed', __phase3_cb)
+    entry.connect('failed', __phase3_failed_cb)
     entry.comments()
 
 def __phase3_cb(entry, info):
-    print '[OK] phase3: comments-downloaded, with: \n%s\n' % info
+    print '[OK] phase3: comments downloaded, with: \n%s\n' % info
 
     entry_id = info[0]['entry_id']
     comment_id = info[0]['id']
 
     comment = Comment(entry_id, comment_id)
-    comment.connect('comment-deleted', __phase4_cb, entry)
-    comment.connect('comment-deleted-failed', __phase4_failed_cb, entry)
+    comment.connect('completed', __phase4_cb, entry)
+    comment.connect('failed', __phase4_failed_cb, entry)
     comment.delete()
 
 def __phase4_cb(comment, info, entry):
-    print '[OK] phase4: comment-deleted, with: \n%s\n' % info
+    print '[OK] phase4: comment deleted, with: \n%s\n' % info
     clean(entry)
 
 def __cleaning_cb(entry, info):
-    print '[OK] cleaning: entry-deleted, with: \n%s\n' % info
+    print '[OK] cleaning: entry deleted, with: \n%s\n' % info
     loop.quit()
 
 def clean(entry):
-  entry.connect('entry-deleted', __cleaning_cb)
-  entry.connect('entry-deleted-failed', __cleaning_failed_cb)
+  id = entry.id
+
+  entry = Entry(id)
+  entry.connect('completed', __cleaning_cb)
+  entry.connect('failed', __cleaning_failed_cb)
   entry.delete()
 
 entry = Entry()
-entry.connect('entry-posted', __phase1_cb)
-entry.connect('entry-posted-failed', __phase1_failed_cb)
+entry.connect('completed', __phase1_cb)
+entry.connect('failed', __phase1_failed_cb)
 entry.post('title', 'description', 'screenshot.png')
 
 loop = GObject.MainLoop()
