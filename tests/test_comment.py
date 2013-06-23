@@ -22,9 +22,10 @@ import sys
 
 from gi.repository import GObject
 
-from ..journalx.setting import Setting
-from ..journalx.entry import Entry
-from ..journalx.comment import Comment
+sys.path.append("..")
+from journalx.setting import Setting
+from journalx.entry import Entry
+from journalx.comment import Comment
 
 
 Setting.set_url('http://localhost:8000')
